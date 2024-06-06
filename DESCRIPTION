@@ -1,0 +1,28 @@
+Package: macaquesimplebrain
+Title: Plot simple macaque brain.
+Version: 1.0
+Authors@R: 
+    person(given = "Kenneth",
+           family = "Chiou",
+           role = c("aut", "cre"),
+           email = "kchiou@uab.edu",
+           comment = c(ORCID = "0000-0001-7247-4107"))
+Description: Provides a workflow for making simple plots on the macaque brain
+License: CC BY 4.0
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Depends:
+    R (>= 4.0.0)
+biocViews:
+Imports:
+	ggplot2 (>= 3.5.0),
+	xml2,
+	purrr,
+	svgtools,
+	svgparser (>= 0.1.2)
+Suggests:
+	RColorBrewer,
+	viridis
+VignetteBuilder: knitr
