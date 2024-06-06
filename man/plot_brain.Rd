@@ -9,11 +9,11 @@ plot_brain(
   regions = NULL,
   base_image = NULL,
   color = NULL,
-  color.family = c("viridis", "brewer"),
+  color.family = c("viridis", "brewer", "ggsci"),
   color.theme = NULL,
   color.limits = NULL,
-  legend = FALSE,
-  labels = FALSE,
+  legend = TRUE,
+  labels = TRUE,
   legend.title = NULL
 )
 }
@@ -26,15 +26,15 @@ plot_brain(
 
 \item{color}{If \code{TRUE}, \code{values} are interpreted as color values to be plotted.}
 
-\item{color.family}{Source of color palettes. Should be one of \code{c("brewer", "viridis")}.}
+\item{color.family}{Source of color palettes. Should be one of \code{c("brewer", "viridis", "ggsci")}.}
 
 \item{color.theme}{Specific palette supported by one of the \code{color.family} sources.}
 
 \item{color.limits}{Limits for the color range. It \code{NULL}, limits will be calculated from the data.}
 
-\item{legend}{If \code{TRUE}, a legend will be included.}
+\item{legend}{If \code{TRUE}, a legend will be included. Default is \code{TRUE}.}
 
-\item{labels}{If \code{TRUE}, brain regions are labeled.}
+\item{labels}{If \code{TRUE}, brain regions are labeled. Default is \code{TRUE}.}
 
 \item{legend.title}{Custom title for the legend. Ignored if \code{legend} is not \code{TRUE}.}
 }
