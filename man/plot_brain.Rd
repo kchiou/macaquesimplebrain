@@ -33,6 +33,8 @@ plot_brain(
 
 \item{color.limits}{Limits for the color range. It \code{NULL}, limits will be calculated from the data.}
 
+\item{reverse}{If \code{TRUE}, reverse the color scale. Ignored if \code{color} is \code{TRUE}.}
+
 \item{legend}{If \code{TRUE}, a legend will be included. Default is \code{TRUE}.}
 
 \item{labels}{If \code{TRUE}, brain regions are labeled. Default is \code{TRUE}.}

@@ -110,6 +110,7 @@
 #' @param color.family Source of color palettes. Should be one of `c("brewer", "viridis". "ggsci")`.
 #' @param color.theme Specific palette supported by one of the `color.family` sources.
 #' @param color.limits Limits for the color range. It `NULL`, limits will be calculated from the data.
+#' @param reverse If `TRUE`, reverse the color scale. Ignored if `color` is `TRUE`.
 #' @param legend If `TRUE`, a legend will be included.
 #' @param legend.title Custom title for the legend. Ignored if `legend` is not `TRUE`.
 #' @param labels If `TRUE`, brain regions are labeled.
@@ -124,6 +125,7 @@ plot_brain = function(
 	color.family=c('viridis','brewer','ggsci'),
 	color.theme=NULL,
 	color.limits=NULL,
+	reverse = FALSE,
 	legend=TRUE,
 	labels=TRUE,
 	legend.title=NULL,
@@ -150,16 +152,24 @@ plot_brain = function(
 				if (is.null(color.theme)) color.theme = 'Set3'
 				if (!color.theme %in% names(.colorBrewerPalettes$qualitative))
 					stop('"color.theme" must be one of ',paste0('c("',paste(names(.colorBrewerPalettes$qualitative),collapse='", "'),'")'))
-				colors = suppressWarnings(RColorBrewer::brewer.pal(length(unique(values)),name=color.theme))
-				names(colors) = unique(values)
+				colors = if (reverse) {
+					suppressWarnings(rev(RColorBrewer::brewer.pal(length(unique(values)),name=color.theme)))
+				} else {
+					suppressWarnings(RColorBrewer::brewer.pal(length(unique(values)),name=color.theme))
+				}
+				names(colors) = if ('factor' %in% class(values)) levels(values) else unique(values)
 				colors = colors[values]
 			} else if (color.family == 'ggsci') {
 				suppressMessages(require(ggsci,warn.conflicts=FALSE))
 				if (is.null(color.theme)) color.theme = 'npg'
 				if (!color.theme %in% c(names(.ggsciPalettes ),c(unlist(lapply(names(.ggsciPalettes),function(i) paste(i,.ggsciPalettes[[i]],sep='_'))))))
 					stop('"pal" must in one of ','c("',paste(c(unlist(lapply(names(.ggsciPalettes),function(i) paste(i,.ggsciPalettes[[i]],sep='_')))),collapse='", "'),'")')
-				colors = suppressWarnings(.ggsciMapPalette(color.theme)(length(unique(values))))
-				names(colors) = unique(values)
+				colors = if (reverse) {
+					suppressWarnings(rev(.ggsciMapPalette(color.theme)(length(unique(values)))))
+				} else {
+					suppressWarnings(.ggsciMapPalette(color.theme)(length(unique(values))))
+				}
+				names(colors) = if ('factor' %in% class(values)) levels(values) else unique(values)
 				colors = colors[values]
 			}
 		}
@@ -172,19 +182,31 @@ plot_brain = function(
 			if (is.null(color.theme)) color.theme = 'PuBu'
 			if (!color.theme %in% unlist(lapply(.colorBrewerPalettes[c('sequential','diverging')],names)))
 				stop('"color.theme" must be one of c("',paste(unlist(lapply(.colorBrewerPalettes[c('sequential','diverging')],names)),collapse='", "'),'")')
-			colors = .map2color(values,RColorBrewer::brewer.pal(.colorBrewerMapPalette(color.theme),name=color.theme),limits=color.limits)
+			colors = if (reverse) {
+				.map2color(values,rev(RColorBrewer::brewer.pal(.colorBrewerMapPalette(color.theme),name=color.theme)),limits=color.limits)
+			} else {
+				.map2color(values,RColorBrewer::brewer.pal(.colorBrewerMapPalette(color.theme),name=color.theme),limits=color.limits)
+			}
 		} else if (color.family == 'viridis') {
 			suppressMessages(require(viridis,warn.conflicts=FALSE))
 			if (is.null(color.theme)) color.theme = 'viridis'
 			if (!color.theme %in% c('magma','A','inferno','B','plasma','C','viridis','D','cividis','E','rocket','F','mako','G','turbo','H'))
 				stop('"color.theme" must be one of c("magma","A","inferno","B","plasma","C","viridis","D","cividis","E","rocket","F","mako","G","turbo","H")')
-			colors = .map2color(values,viridis::viridis_pal(option=color.theme)(255),limits=color.limits)
+			colors = if (reverse) {
+				.map2color(values,rev(viridis::viridis_pal(option=color.theme)(255)),limits=color.limits)
+			} else {
+				.map2color(values,viridis::viridis_pal(option=color.theme)(255),limits=color.limits)
+			}
 		} else if (color.family == 'ggsci') {
 			suppressMessages(require(ggsci,warn.conflicts=FALSE))
 			if (is.null(color.theme)) color.theme = 'gsea'
 			if (!color.theme %in% c('gsea','material'))
 				stop('"color.theme" must in one of c("gsea", "material")')
-			colors = .map2color(values,.ggsciMapPalette2(color.theme),limits=color.limits)
+			colors = if (reverse) {
+				.map2color(values,rev(.ggsciMapPalette2(color.theme)),limits=color.limits)
+			} else {
+				.map2color(values,.ggsciMapPalette2(color.theme),limits=color.limits)
+			}
 		}
 	} else {
 		stop('"values" must be one of c("integer","numeric","logical","character","factor")')
@@ -229,7 +251,7 @@ plot_brain = function(
 			}
 			if ('outline_width' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['outline_width']], ~xml2::xml_set_attr(.x, 'stroke-width', .y))
 			if ('outline_alpha' %in% names(display.options)) {
-				# purrr::walk2(these.nodes, display.options[['outline_alpha']], ~xml2::xml_set_attr(.x, 'stroke-opacity', .y))
+				# purrr::walk2(these.nodes, ifelse(display.options[['outline_alpha']]*2>1,1,display.options[['outline_alpha']]*2), ~xml2::xml_set_attr(.x, 'stroke-opacity', .y))
 				these.nodes = xml2::xml_find_all(xml,paste(unlist(lapply(regions,function(i) paste0('//*[@class="',i,'"]|//*[@id="',i,'"]'))),collapse='|'))
 				purrr::walk2(these.nodes, display.options[['outline_alpha']], ~xml2::xml_set_attr(.x, 'opacity', .y))
 			}
@@ -280,11 +302,23 @@ plot_brain = function(
 		}
 	} else if (any(c('numeric','integer') %in% class(values))) {
 		if (color.family == 'brewer') {
-			p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + scale_fill_gradientn(colors=RColorBrewer::brewer.pal(.colorBrewerMapPalette(color.theme),name=color.theme))
+			if (reverse){
+				p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + scale_fill_gradientn(colors=rev(RColorBrewer::brewer.pal(.colorBrewerMapPalette(color.theme),name=color.theme)))
+			} else {
+				p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + scale_fill_gradientn(colors=RColorBrewer::brewer.pal(.colorBrewerMapPalette(color.theme),name=color.theme))
+			}
 		} else if (color.family == 'ggsci') {
-			p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + scale_fill_gradientn(colors=.ggsciMapPalette2(color.theme))
+			if (reverse) {
+				p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + scale_fill_gradientn(colors=rev(.ggsciMapPalette2(color.theme)))
+			} else {
+				p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + scale_fill_gradientn(colors=.ggsciMapPalette2(color.theme))
+			}
 		} else if (color.family == 'viridis') {
-			p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + scale_fill_viridis(option=color.theme)
+			if (reverse) {
+				p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + viridis::scale_fill_viridis(option=color.theme,direction=-1)
+			} else {
+				p = ggplot() + geom_blank(mapping=aes(fill=if (!is.null(color.limits)) color.limits else values),show.legend=TRUE) + viridis::scale_fill_viridis(option=color.theme)
+			}
 		}
 	}
 	p = p + annotation_custom(g,xmin=0,xmax=1.25,ymin=0,ymax=1)
