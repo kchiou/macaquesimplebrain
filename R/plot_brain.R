@@ -174,8 +174,8 @@ plot_brain = function(
 		} else if (color.family == 'viridis') {
 			suppressMessages(require(viridis,warn.conflicts=FALSE))
 			if (is.null(color.theme)) color.theme = 'viridis'
-			if (!color.theme %in% c(names(.ggsciPalettes),unlist(lapply(names(.ggsciPalettes),function(i) paste(i,.ggsciPalettes[[i]],sep='_')))))
-				stop('"color.theme" must in one of c("',paste(c(unlist(lapply(names(.ggsciPalettes),function(i) paste(i,.ggsciPalettes[[i]],sep='_')))),collapse='", "'),'")')
+			if (!color.theme %in% c('magma','A','inferno','B','plasma','C','viridis','D','cividis','E','rocket','F','mako','G','turbo','H'))
+				stop('"color.theme" must be one of c("magma","A","inferno","B","plasma","C","viridis","D","cividis","E","rocket","F","mako","G","turbo","H")')
 			colors = .map2color(values,viridis::viridis_pal(option=color.theme)(255),limits=color.limits)
 		} else if (color.family == 'ggsci') {
 			suppressMessages(require(ggsci,warn.conflicts=FALSE))
