@@ -211,12 +211,28 @@ plot_brain = function(
 	purrr::walk2(these.nodes, if(labels) 'inline' else 'none', ~xml2::xml_set_attr(.x, 'display', .y))
 	
 	if (length(display.options)) {
-		if (!any(c('bg_color','bg_alpha','stroke_color','stroke_alpha','stroke_width','label_color','label_alpha','pointer_color','pointer_alpha','pointer_width') %in% names(display.options))) stop('At least one parameter must be provided from c("bg_color", "bg_alpha", "stroke_color", "stroke_alpha", "stroke_width", "label_color", "label_alpha", "pointer_color", "pointer_alpha", "pointer_width").')
+		if (!any(c('outline_color','outline_alpha','outline_width','bg_color','bg_alpha','stroke_color','stroke_alpha','stroke_width','label_color','label_alpha','pointer_color','pointer_alpha','pointer_width') %in% names(display.options))) stop('At least one parameter must be provided from c("bg_color", "bg_alpha", "stroke_color", "stroke_alpha", "stroke_width", "label_color", "label_alpha", "pointer_color", "pointer_alpha", "pointer_width").')
 		if (length(intersect(c('bg_color','bg_alpha'),names(display.options)))) {
 			these.nodes = xml2::xml_find_all(xml,'//*[@class="bg"]')
 			purrr::walk2(these.nodes, 'inline', ~xml2::xml_set_attr(.x, 'display', .y))
 			if ('bg_color' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['bg_color']], ~xml2::xml_set_attr(.x, 'fill', .y))
 			if ('bg_alpha' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['bg_alpha']], ~xml2::xml_set_attr(.x, 'opacity', .y))
+		}
+		if (length(intersect(c('outline_color','outline_alpha','outline_width'),names(display.options)))) {
+			these.nodes = xml2::xml_find_all(xml,paste(unlist(lapply(regions,function(i) paste0('//*[@id="',i,'"]'))),collapse='|'))
+			if ('outline_color' %in% names(display.options)) {
+				if (display.options[['outline_color']] == 'inherit') {
+					purrr::walk2(these.nodes, colors[xml2::xml_attr(these.nodes,'id')], ~xml2::xml_set_attr(.x, 'stroke', .y))
+				} else {
+					purrr::walk2(these.nodes, display.options[['outline_color']], ~xml2::xml_set_attr(.x, 'stroke', .y))
+				}
+			}
+			if ('outline_width' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['outline_width']], ~xml2::xml_set_attr(.x, 'stroke-width', .y))
+			if ('outline_alpha' %in% names(display.options)) {
+				# purrr::walk2(these.nodes, display.options[['outline_alpha']], ~xml2::xml_set_attr(.x, 'stroke-opacity', .y))
+				these.nodes = xml2::xml_find_all(xml,paste(unlist(lapply(regions,function(i) paste0('//*[@class="',i,'"]|//*[@id="',i,'"]'))),collapse='|'))
+				purrr::walk2(these.nodes, display.options[['outline_alpha']], ~xml2::xml_set_attr(.x, 'opacity', .y))
+			}
 		}
 		if (length(intersect(c('stroke_color','stroke_alpha','stroke_width'),names(display.options)))) {
 			these.nodes = xml2::xml_find_all(xml,'//*[contains(@class, "brain")]')
