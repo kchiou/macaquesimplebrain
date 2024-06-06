@@ -105,7 +105,7 @@
 #' 
 #' @param values Vector of values to be plotted. Names are optional and should correspond with region names. If names are not provided, `regions` must be provided.
 #' @param regions Vector of region names. Should be the same length as `values`. Required if `values` is an unnamed vector.
-#' @param base_image Base image to be used. Currently, only the default `"chiou&decasien2022"` is supported.
+#' @param base.image Base image to be used. Currently, only the default `"chiou&decasien2022"` is supported.
 #' @param color If `TRUE`, `values` are interpreted as color values to be plotted.
 #' @param color.family Source of color palettes. Should be one of `c("brewer", "viridis". "ggsci")`.
 #' @param color.theme Specific palette supported by one of the `color.family` sources.
@@ -113,19 +113,21 @@
 #' @param legend If `TRUE`, a legend will be included.
 #' @param legend.title Custom title for the legend. Ignored if `legend` is not `TRUE`.
 #' @param labels If `TRUE`, brain regions are labeled.
+#' @param display.options List of brain display parameters.
 #' @return A ggplot object.
 #' @export
 plot_brain = function(
 	values=NULL,
 	regions=NULL,
-	base_image=NULL,
+	base.image=NULL,
 	color=NULL,
 	color.family=c('viridis','brewer','ggsci'),
 	color.theme=NULL,
 	color.limits=NULL,
 	legend=TRUE,
 	labels=TRUE,
-	legend.title=NULL
+	legend.title=NULL,
+	display.options=list()
 ) {
 	suppressMessages(require(svgtools,warn.conflicts=FALSE))
 	suppressMessages(require(xml2,warn.conflicts=FALSE))
@@ -189,7 +191,7 @@ plot_brain = function(
 	}
 	names(colors) = regions
 	
-	if (is.null(base_image) || base_image == 'chiou&decasien2022') {
+	if (is.null(base.image) || base.image == 'chiou&decasien2022') {
 		svg = system.file('macaque_brain.svg',package='macaquesimplebrain')
 	} else {
 		stop('"chiou&decasien2022" is currently the only supported base image')
@@ -208,6 +210,44 @@ plot_brain = function(
 	purrr::walk2(these.nodes, if(labels) '#000' else 'none', ~xml2::xml_set_attr(.x, 'stroke', .y))
 	purrr::walk2(these.nodes, if(labels) 'inline' else 'none', ~xml2::xml_set_attr(.x, 'display', .y))
 	
+	if (length(display.options)) {
+		if (!any(c('bg_color','bg_alpha','stroke_color','stroke_alpha','stroke_width','label_color','label_alpha','pointer_color','pointer_alpha','pointer_width') %in% names(display.options))) stop('At least one parameter must be provided from c("bg_color", "bg_alpha", "stroke_color", "stroke_alpha", "stroke_width", "label_color", "label_alpha", "pointer_color", "pointer_alpha", "pointer_width").')
+		if (length(intersect(c('bg_color','bg_alpha'),names(display.options)))) {
+			these.nodes = xml2::xml_find_all(xml,'//*[@class="bg"]')
+			purrr::walk2(these.nodes, 'inline', ~xml2::xml_set_attr(.x, 'display', .y))
+			if ('bg_color' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['bg_color']], ~xml2::xml_set_attr(.x, 'fill', .y))
+			if ('bg_alpha' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['bg_alpha']], ~xml2::xml_set_attr(.x, 'opacity', .y))
+		}
+		if (length(intersect(c('stroke_color','stroke_alpha','stroke_width'),names(display.options)))) {
+			these.nodes = xml2::xml_find_all(xml,'//*[contains(@class, "brain")]')
+			if ('stroke_color' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['stroke_color']], ~xml2::xml_set_attr(.x, 'stroke', .y))
+			if ('stroke_alpha' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['stroke_alpha']], ~xml2::xml_set_attr(.x, 'stroke-opacity', .y))
+			if ('stroke_width' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['stroke_width']], ~xml2::xml_set_attr(.x, 'stroke-width', .y))
+		}
+		if (length(intersect(c('label_color','label_alpha'),names(display.options))) && labels) {
+			these.nodes = xml2::xml_find_all(xml,paste(unlist(lapply(regions,function(i) paste0('//*[@class="label-',i,'"]'))),collapse='|'))
+			if ('label_color' %in% names(display.options)) {
+				if (display.options[['label_color']] == 'inherit') {
+					purrr::walk2(these.nodes, colors[gsub('^label-','',xml2::xml_attr(these.nodes,'class'))], ~xml2::xml_set_attr(.x, 'fill', .y))
+				} else {
+					purrr::walk2(these.nodes, display.options[['label_color']], ~xml2::xml_set_attr(.x, 'fill', .y))
+				}
+			}
+			if ('label_alpha' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['label_alpha']], ~xml2::xml_set_attr(.x, 'opacity', .y))
+		}
+		if (length(intersect(c('pointer_color','pointer_alpha','pointer_width'),names(display.options))) && labels) {
+			these.nodes = xml2::xml_find_all(xml,paste(unlist(lapply(regions,function(i) paste0('//*[@id="path-',i,'"]'))),collapse='|'))
+			if ('pointer_color' %in% names(display.options)) {
+				if (display.options[['pointer_color']] == 'inherit') {
+					purrr::walk2(these.nodes, colors[gsub('^path-','',xml2::xml_attr(these.nodes,'id'))], ~xml2::xml_set_attr(.x, 'stroke', .y))
+				} else {
+					purrr::walk2(these.nodes, display.options[['pointer_color']], ~xml2::xml_set_attr(.x, 'stroke', .y))
+				}
+			}
+			if ('pointer_alpha' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['pointer_alpha']], ~xml2::xml_set_attr(.x, 'stroke-opacity', .y))
+			if ('pointer_width' %in% names(display.options)) purrr::walk2(these.nodes, display.options[['pointer_width']], ~xml2::xml_set_attr(.x, 'stroke-width', .y))
+		}
+	}
 	g = svgparser::read_svg(toString(xml))
 	
 	if (any(c('character','factor','ordered','logical') %in% class(values))) {

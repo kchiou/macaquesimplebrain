@@ -7,14 +7,15 @@
 plot_brain(
   values = NULL,
   regions = NULL,
-  base_image = NULL,
+  base.image = NULL,
   color = NULL,
   color.family = c("viridis", "brewer", "ggsci"),
   color.theme = NULL,
   color.limits = NULL,
   legend = TRUE,
   labels = TRUE,
-  legend.title = NULL
+  legend.title = NULL,
+  display.options = list()
 )
 }
 \arguments{
@@ -22,7 +23,7 @@ plot_brain(
 
 \item{regions}{Vector of region names. Should be the same length as \code{values}. Required if \code{values} is an unnamed vector.}
 
-\item{base_image}{Base image to be used. Currently, only the default \code{"chiou&decasien2022"} is supported.}
+\item{base.image}{Base image to be used. Currently, only the default \code{"chiou&decasien2022"} is supported.}
 
 \item{color}{If \code{TRUE}, \code{values} are interpreted as color values to be plotted.}
 
@@ -37,6 +38,8 @@ plot_brain(
 \item{labels}{If \code{TRUE}, brain regions are labeled. Default is \code{TRUE}.}
 
 \item{legend.title}{Custom title for the legend. Ignored if \code{legend} is not \code{TRUE}.}
+
+\item{display.options}{List of brain display parameters.}
 }
 \value{
 A ggplot object.
