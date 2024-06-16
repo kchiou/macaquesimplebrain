@@ -23,7 +23,7 @@ plot_brain(
 
 \item{regions}{Vector of region names. Should be the same length as \code{values}. Required if \code{values} is an unnamed vector.}
 
-\item{base.image}{Base image to be used. Currently, only the default \code{"chiou&decasien2022"} is supported.}
+\item{base.image}{Base image to be used. Base image to be used. Should be one of \code{c("chiou_huang_2023", "chiou_decasien_2022", "wbb47", "aparc", "aparc_aseg", "lausanne120", "lausanne120_aseg", "lausanne250")}.}
 
 \item{color}{If \code{TRUE}, \code{values} are interpreted as color values to be plotted.}
 
